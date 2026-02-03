@@ -1,11 +1,13 @@
 import React from "react";
-import { StyleSheet, View, ScrollView, RefreshControl } from "react-native";
+import { StyleSheet, View, ScrollView, RefreshControl, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -13,6 +15,7 @@ import { Spacing, BorderRadius } from "@/constants/theme";
 import { useWatchlist, usePortfolioPredictions } from "@/hooks/useStockData";
 import { PredictionBadge } from "@/components/PredictionBadge";
 import { SectionHeader } from "@/components/SectionHeader";
+import { SentimentGauge } from "@/components/SentimentGauge";
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { FAB } from "@/components/FAB";
@@ -25,7 +28,7 @@ export default function InsightsScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const navigation = useNavigation<NavigationProp>();
 
   const { watchlist } = useWatchlist();
@@ -48,6 +51,7 @@ export default function InsightsScreen() {
   };
 
   const handleStockPress = (symbol: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate("StockDetail", { symbol });
   };
 
@@ -95,10 +99,18 @@ export default function InsightsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+      <LinearGradient
+        colors={
+          isDark
+            ? ["#1e3a5f20", "transparent"]
+            : ["#dbeafe40", "transparent"]
+        }
+        style={styles.headerGradient}
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{
-          paddingTop: headerHeight + Spacing.xl,
+          paddingTop: headerHeight + Spacing.lg,
           paddingBottom: tabBarHeight + Spacing.xl,
           paddingHorizontal: Spacing.lg,
         }}
@@ -107,46 +119,59 @@ export default function InsightsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
-        <View
-          style={[
-            styles.summaryCard,
-            {
-              backgroundColor: theme.backgroundDefault,
-              borderColor: theme.cardBorder,
-            },
-          ]}
-        >
-          <View style={styles.summaryHeader}>
-            <Feather name="bar-chart-2" size={20} color={theme.primary} />
-            <ThemedText style={styles.summaryTitle}>
-              Portfolio Summary
+        <ThemedText style={styles.headerTitle}>AI Analysis</ThemedText>
+        <ThemedText style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
+          Smart predictions for your portfolio
+        </ThemedText>
+
+        <SentimentGauge
+          bullish={summary.bullish || 2}
+          bearish={summary.bearish || 1}
+          neutral={summary.neutral || 1}
+        />
+
+        <View style={styles.statsRow}>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: theme.backgroundDefault, borderColor: theme.cardBorder },
+            ]}
+          >
+            <View style={[styles.statIcon, { backgroundColor: `${theme.positive}15` }]}>
+              <Feather name="arrow-up-right" size={18} color={theme.positive} />
+            </View>
+            <ThemedText style={styles.statValue}>{summary.bullish || 0}</ThemedText>
+            <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>
+              Bullish
             </ThemedText>
           </View>
-          <View style={styles.summaryStats}>
-            <View style={styles.statItem}>
-              <ThemedText style={[styles.statValue, { color: theme.positive }]}>
-                {summary.bullish}
-              </ThemedText>
-              <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>
-                Bullish
-              </ThemedText>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: theme.backgroundDefault, borderColor: theme.cardBorder },
+            ]}
+          >
+            <View style={[styles.statIcon, { backgroundColor: `${theme.negative}15` }]}>
+              <Feather name="arrow-down-right" size={18} color={theme.negative} />
             </View>
-            <View style={styles.statItem}>
-              <ThemedText style={[styles.statValue, { color: theme.negative }]}>
-                {summary.bearish}
-              </ThemedText>
-              <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>
-                Bearish
-              </ThemedText>
+            <ThemedText style={styles.statValue}>{summary.bearish || 0}</ThemedText>
+            <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>
+              Bearish
+            </ThemedText>
+          </View>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: theme.backgroundDefault, borderColor: theme.cardBorder },
+            ]}
+          >
+            <View style={[styles.statIcon, { backgroundColor: `${theme.textSecondary}15` }]}>
+              <Feather name="minus" size={18} color={theme.textSecondary} />
             </View>
-            <View style={styles.statItem}>
-              <ThemedText style={[styles.statValue, { color: theme.textSecondary }]}>
-                {summary.neutral}
-              </ThemedText>
-              <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>
-                Neutral
-              </ThemedText>
-            </View>
+            <ThemedText style={styles.statValue}>{summary.neutral || 0}</ThemedText>
+            <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>
+              Neutral
+            </ThemedText>
           </View>
         </View>
 
@@ -188,11 +213,12 @@ function PredictionItem({
   onPress: () => void;
 }) {
   return (
-    <View
-      style={[
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
         styles.predictionItem,
         {
-          backgroundColor: theme.backgroundDefault,
+          backgroundColor: pressed ? theme.backgroundSecondary : theme.backgroundDefault,
           borderColor: theme.cardBorder,
         },
       ]}
@@ -214,7 +240,7 @@ function PredictionItem({
           size="small"
         />
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -242,6 +268,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+  },
   scrollView: {
     flex: 1,
   },
@@ -249,36 +282,43 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
   },
-  summaryCard: {
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    marginBottom: Spacing.xl,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.md,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: "center",
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    marginBottom: Spacing.lg,
   },
-  summaryHeader: {
-    flexDirection: "row",
+  statIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: "center",
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-  summaryTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  summaryStats: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  statItem: {
-    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.sm,
   },
   statValue: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "700",
     marginBottom: 2,
   },
   statLabel: {
-    fontSize: 13,
+    fontSize: 12,
   },
   predictionItem: {
     flexDirection: "row",

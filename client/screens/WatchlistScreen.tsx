@@ -1,11 +1,12 @@
 import React from "react";
 import { StyleSheet, View, FlatList, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 
+import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
 import { useWatchlist, useWatchlistStocks } from "@/hooks/useStockData";
@@ -20,9 +21,8 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function WatchlistScreen() {
   const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const navigation = useNavigation<NavigationProp>();
 
   const { watchlist, isLoading: watchlistLoading } = useWatchlist();
@@ -51,6 +51,15 @@ export default function WatchlistScreen() {
   const isLoading = watchlistLoading || stocksLoading;
   const isEmpty = !isLoading && watchlist.length === 0;
 
+  const renderHeader = () => (
+    <View style={styles.headerSection}>
+      <ThemedText style={styles.headerTitle}>My Watchlist</ThemedText>
+      <ThemedText style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
+        {watchlist.length > 0 ? `Tracking ${watchlist.length} stocks` : "Track your favorite stocks"}
+      </ThemedText>
+    </View>
+  );
+
   const renderItem = ({ item }: { item: Stock }) => (
     <StockCard
       stock={item}
@@ -77,47 +86,52 @@ export default function WatchlistScreen() {
     </View>
   );
 
-  if (isLoading && watchlist.length === 0) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+  return (
+    <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+      <LinearGradient
+        colors={
+          isDark
+            ? ["#1e3a5f20", "transparent"]
+            : ["#dbeafe40", "transparent"]
+        }
+        style={styles.headerGradient}
+      />
+      {isLoading && watchlist.length === 0 ? (
         <View
           style={[
             styles.content,
             {
-              paddingTop: headerHeight + Spacing.xl,
+              paddingTop: insets.top + Spacing["3xl"],
               paddingHorizontal: Spacing.lg,
             },
           ]}
         >
+          {renderHeader()}
           {renderLoading()}
         </View>
-        <FAB onPress={handleSearchPress} bottom={tabBarHeight + Spacing.lg} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
-      <FlatList
-        style={styles.list}
-        contentContainerStyle={[
-          styles.listContent,
-          {
-            paddingTop: headerHeight + Spacing.xl,
-            paddingBottom: tabBarHeight + Spacing.xl,
-            paddingHorizontal: Spacing.lg,
-          },
-          isEmpty && styles.emptyContent,
-        ]}
-        scrollIndicatorInsets={{ bottom: insets.bottom }}
-        data={stocks || []}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.symbol}
-        ListEmptyComponent={isEmpty ? renderEmpty : null}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-      />
+      ) : (
+        <FlatList
+          style={styles.list}
+          contentContainerStyle={[
+            styles.listContent,
+            {
+              paddingTop: insets.top + Spacing["3xl"],
+              paddingBottom: tabBarHeight + Spacing.xl,
+              paddingHorizontal: Spacing.lg,
+            },
+            isEmpty && styles.emptyContent,
+          ]}
+          scrollIndicatorInsets={{ bottom: insets.bottom }}
+          data={stocks || []}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.symbol}
+          ListHeaderComponent={isEmpty ? null : renderHeader}
+          ListEmptyComponent={isEmpty ? renderEmpty : null}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+        />
+      )}
       <FAB onPress={handleSearchPress} bottom={tabBarHeight + Spacing.lg} />
     </View>
   );
@@ -126,6 +140,13 @@ export default function WatchlistScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headerGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
   },
   content: {
     flex: 1,
@@ -138,6 +159,17 @@ const styles = StyleSheet.create({
   },
   emptyContent: {
     justifyContent: "center",
+  },
+  headerSection: {
+    marginBottom: Spacing.xl,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 15,
   },
   loadingContainer: {
     marginTop: Spacing.lg,

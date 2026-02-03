@@ -19,7 +19,7 @@ export default function WatchlistStackNavigator() {
         name="Watchlist"
         component={WatchlistScreen}
         options={{
-          headerTitle: "Watchlist",
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

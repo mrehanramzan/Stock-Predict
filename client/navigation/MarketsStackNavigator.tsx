@@ -2,7 +2,6 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import MarketsScreen from "@/screens/MarketsScreen";
-import { HeaderTitle } from "@/components/HeaderTitle";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type MarketsStackParamList = {
@@ -20,7 +19,7 @@ export default function MarketsStackNavigator() {
         name="Markets"
         component={MarketsScreen}
         options={{
-          headerTitle: () => <HeaderTitle title="StockPredict" />,
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

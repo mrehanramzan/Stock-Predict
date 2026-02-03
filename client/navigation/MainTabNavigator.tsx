@@ -54,7 +54,7 @@ export default function MainTabNavigator() {
         options={{
           title: "Markets",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="trending-up" size={size} color={color} />
+            <Feather name="bar-chart-2" size={size} color={color} />
           ),
         }}
       />
@@ -74,7 +74,7 @@ export default function MainTabNavigator() {
         options={{
           title: "Insights",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="cpu" size={size} color={color} />
+            <Feather name="activity" size={size} color={color} />
           ),
         }}
       />

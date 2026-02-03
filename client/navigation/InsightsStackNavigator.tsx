@@ -19,7 +19,7 @@ export default function InsightsStackNavigator() {
         name="Insights"
         component={InsightsScreen}
         options={{
-          headerTitle: "Insights",
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

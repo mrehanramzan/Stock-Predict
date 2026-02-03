@@ -1,18 +1,23 @@
 import React from "react";
-import { StyleSheet, View, ScrollView, RefreshControl } from "react-native";
+import { StyleSheet, View, ScrollView, RefreshControl, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
+import { Feather } from "@expo/vector-icons";
 
+import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing } from "@/constants/theme";
+import { Spacing, BorderRadius } from "@/constants/theme";
 import { useMarketIndices, useTrendingStocks } from "@/hooks/useStockData";
 import { StockCard } from "@/components/StockCard";
 import { MarketIndexCard } from "@/components/MarketIndexCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { EmptyState } from "@/components/EmptyState";
+import { PortfolioChart } from "@/components/PortfolioChart";
+import { PerformanceCard } from "@/components/PerformanceCard";
 import {
   StockCardSkeleton,
   MarketIndexSkeleton,
@@ -26,7 +31,7 @@ export default function MarketsScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const navigation = useNavigation<NavigationProp>();
 
   const {
@@ -79,10 +84,18 @@ export default function MarketsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+      <LinearGradient
+        colors={
+          isDark
+            ? ["#1e3a5f20", "transparent"]
+            : ["#dbeafe40", "transparent"]
+        }
+        style={styles.headerGradient}
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{
-          paddingTop: headerHeight + Spacing.xl,
+          paddingTop: headerHeight + Spacing.lg,
           paddingBottom: tabBarHeight + Spacing.xl,
           paddingHorizontal: Spacing.lg,
         }}
@@ -91,7 +104,34 @@ export default function MarketsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
-        <SectionHeader title="Market Overview" />
+        <View style={styles.welcomeSection}>
+          <ThemedText style={styles.welcomeText}>Good Morning</ThemedText>
+          <ThemedText style={[styles.welcomeSubtext, { color: theme.textSecondary }]}>
+            Here's your market overview
+          </ThemedText>
+        </View>
+
+        <View style={styles.performanceRow}>
+          <PerformanceCard
+            title="Portfolio Value"
+            value="$24,532"
+            change={2.45}
+            icon="briefcase"
+          />
+          <PerformanceCard
+            title="Today's Gain"
+            value="$523"
+            change={1.87}
+            icon="trending-up"
+          />
+        </View>
+
+        <PortfolioChart
+          data={[]}
+          title="Portfolio Performance"
+        />
+
+        <SectionHeader title="Market Indices" />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -111,17 +151,16 @@ export default function MarketsScreen() {
           )}
         </ScrollView>
 
-        <SectionHeader title="Trending Stocks" />
+        <SectionHeader title="Trending Stocks" actionLabel="See All" onAction={handleSearchPress} />
         {trendingLoading ? (
           <>
             <StockCardSkeleton />
             <StockCardSkeleton />
             <StockCardSkeleton />
             <StockCardSkeleton />
-            <StockCardSkeleton />
           </>
         ) : trending && trending.length > 0 ? (
-          trending.map((stock) => (
+          trending.slice(0, 6).map((stock) => (
             <StockCard
               key={stock.symbol}
               stock={stock}
@@ -149,8 +188,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+  },
   scrollView: {
     flex: 1,
+  },
+  welcomeSection: {
+    marginBottom: Spacing.xl,
+  },
+  welcomeText: {
+    fontSize: 28,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  welcomeSubtext: {
+    fontSize: 15,
+  },
+  performanceRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   indicesScroll: {
     marginHorizontal: -Spacing.lg,
