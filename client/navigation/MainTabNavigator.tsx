@@ -3,12 +3,17 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet } from "react-native";
-import HomeStackNavigator from "@/navigation/HomeStackNavigator";
+
+import MarketsStackNavigator from "@/navigation/MarketsStackNavigator";
+import WatchlistStackNavigator from "@/navigation/WatchlistStackNavigator";
+import InsightsStackNavigator from "@/navigation/InsightsStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 
 export type MainTabParamList = {
-  HomeTab: undefined;
+  MarketsTab: undefined;
+  WatchlistTab: undefined;
+  InsightsTab: undefined;
   ProfileTab: undefined;
 };
 
@@ -19,7 +24,7 @@ export default function MainTabNavigator() {
 
   return (
     <Tab.Navigator
-      initialRouteName="HomeTab"
+      initialRouteName="MarketsTab"
       screenOptions={{
         tabBarActiveTintColor: theme.tabIconSelected,
         tabBarInactiveTintColor: theme.tabIconDefault,
@@ -44,12 +49,32 @@ export default function MainTabNavigator() {
       }}
     >
       <Tab.Screen
-        name="HomeTab"
-        component={HomeStackNavigator}
+        name="MarketsTab"
+        component={MarketsStackNavigator}
         options={{
-          title: "Home",
+          title: "Markets",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="home" size={size} color={color} />
+            <Feather name="trending-up" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="WatchlistTab"
+        component={WatchlistStackNavigator}
+        options={{
+          title: "Watchlist",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="star" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="InsightsTab"
+        component={InsightsStackNavigator}
+        options={{
+          title: "Insights",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="cpu" size={size} color={color} />
           ),
         }}
       />

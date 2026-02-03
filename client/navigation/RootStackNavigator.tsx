@@ -1,12 +1,15 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
 import MainTabNavigator from "@/navigation/MainTabNavigator";
-import ModalScreen from "@/screens/ModalScreen";
+import StockDetailScreen from "@/screens/StockDetailScreen";
+import SearchModalScreen from "@/screens/SearchModalScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
   Main: undefined;
-  Modal: undefined;
+  StockDetail: { symbol: string };
+  SearchModal: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -22,11 +25,18 @@ export default function RootStackNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="Modal"
-        component={ModalScreen}
+        name="StockDetail"
+        component={StockDetailScreen}
+        options={{
+          headerTitle: "",
+        }}
+      />
+      <Stack.Screen
+        name="SearchModal"
+        component={SearchModalScreen}
         options={{
           presentation: "modal",
-          headerTitle: "Modal",
+          headerTitle: "Search Stocks",
         }}
       />
     </Stack.Navigator>
